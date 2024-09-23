@@ -26,6 +26,7 @@
 #include <string>
 
 #include "../../inc/trace_instruction.h"
+#include "../../inc/trace_malloc.h"
 #include "pin.H"
 
 using trace_instr_format_t = input_instr;
