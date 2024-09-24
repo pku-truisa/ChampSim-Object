@@ -22,6 +22,7 @@
 struct input_malloc {
   // Malloc Sequence Counte
     unsigned long long malloc_count;
+    unsigned long long instruction_count;
 
     unsigned long long malloc_size;
     unsigned long long malloc_base;

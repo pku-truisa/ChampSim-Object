@@ -35,6 +35,7 @@ constexpr std::size_t NUM_INSTR_SOURCES = 4;
 struct input_instr {
   // instruction pointer or PC (Program Counter)
   unsigned long long ip;
+  unsigned long long instruction_count;
 
   // branch info
   unsigned char is_branch;
@@ -58,6 +59,7 @@ struct input_instr {
 struct cloudsuite_instr {
   // instruction pointer or PC (Program Counter)
   unsigned long long ip;
+  unsigned long long instruction_count;
 
   // branch info
   unsigned char is_branch;
