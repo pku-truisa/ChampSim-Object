@@ -19,14 +19,8 @@
 
 #include <limits>
 
-struct unmap_object{
-    unsigned long long malloc_count;
-    unsigned long long malloc_end_instr_count;
-};
-using remap_info = unmap_object;
-
-struct malloc_object {
-  // Malloc Counter
+struct input_malloc {
+  // Malloc Sequence Counte
     unsigned long long malloc_count;
 
     unsigned long long malloc_size;
