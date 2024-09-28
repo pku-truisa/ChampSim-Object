@@ -75,7 +75,7 @@ struct ooo_model_instr {
 
   std::vector<uint64_t> source_memobject_id = {};
   std::vector<uint64_t> source_memobject_base = {};
-  std::vector<uint64_t> source_memoject_bound = {};
+  std::vector<uint64_t> source_memobject_bound = {};
   // these are indices of instructions in the ROB that depend on me
   std::vector<std::reference_wrapper<ooo_model_instr>> registers_instrs_depend_on_me;
 
