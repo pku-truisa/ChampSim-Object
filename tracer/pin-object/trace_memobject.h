@@ -19,7 +19,7 @@
 
 #include <limits>
 
-#include "trace_instruction.h"
+#include "../../inc/trace_instruction.h"
 
 struct trace_instr {
   // instruction pointer or PC (Program Counter)
