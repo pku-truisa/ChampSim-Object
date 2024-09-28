@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "trace_instruction.h"
-#include "trace_memobject.h"
 
 // branch types
 enum branch_type {

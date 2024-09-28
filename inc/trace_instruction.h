@@ -69,9 +69,9 @@ struct cloudsuite_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory
   unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory
 
-  unsigned long long destination_memory_malloc_count[NUM_INSTR_DESTINATIONS]; // output memory malloc count
-  unsigned long long destination_memory_base[NUM_INSTR_DESTINATIONS];         // output memory base address
-  unsigned long long destination_memory_bound[NUM_INSTR_DESTINATIONS];        // output memory bound address
+  unsigned long long destination_memobject_id[NUM_INSTR_DESTINATIONS]; // output memory malloc count
+  unsigned long long destination_memobject_base[NUM_INSTR_DESTINATIONS];         // output memory base address
+  unsigned long long destination_memobject_bound[NUM_INSTR_DESTINATIONS];        // output memory bound address
 
   unsigned long long source_memobject_id[NUM_INSTR_SOURCES];    // input memory object id  
   unsigned long long source_memobject_base[NUM_INSTR_SOURCES];  // input memory base address
