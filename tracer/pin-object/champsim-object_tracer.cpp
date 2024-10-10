@@ -184,8 +184,7 @@ VOID Instruction(INS ins, VOID* v)
 
 VOID AllocObjectBefore(UINT64 size)
 {
-  // Simulation Stop
-  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+
     
   trace_memobject_format_t curr_memobject = {};    
 
@@ -199,7 +198,10 @@ VOID AllocObjectBefore(UINT64 size)
 
   inside_routine = true;
   ++memobjCount;
-}
+  
+  // Simulation Stop
+  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+  }
 
 VOID AllocObjectAfter(UINT64 ret)
 {
@@ -207,7 +209,7 @@ VOID AllocObjectAfter(UINT64 ret)
   memobject_history.rbegin()->obase = ret;
 
   // Simulation Stop
-  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
 }
 
 VOID FreeObjectBefore(UINT64 addr)
@@ -225,7 +227,7 @@ VOID FreeObjectBefore(UINT64 addr)
   }
 
   // Simulation Stop
-  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
 }
 
 /*!
@@ -296,8 +298,10 @@ VOID Fini(INT32 code, VOID* v)
   // Generate Ouput Trace File
   /* ===================================================================== */
   // Open instruction trace file for read
-  outfile.open(KnobInstrFile.Value().c_str(), std::ios_base::binary | std::ios_base::in);
-  if (!outfile) {
+
+  FILE* instrfile;
+  instrfile = fopen(KnobInstrFile.Value().c_str(), "rb");
+  if (!instrfile) {
     std::cout << "Couldn't open instruction trace file. No Exiting." << std::endl;
     exit(1);
   }
@@ -305,7 +309,7 @@ VOID Fini(INT32 code, VOID* v)
   trace_instr_format_t curr_trace_instr;
   unsigned long long instr_cnt = 0;
 
-  while(fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, outfile))
+  while(fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, instrfile))
   {
       instr_cnt++;
       input_instr_format_t buf_instr = {};
@@ -359,7 +363,6 @@ VOID Fini(INT32 code, VOID* v)
       tracefile.write(buf, sizeof(input_instr));
   }
 
-  outfile.close();
   tracefile.close();
 }
 
