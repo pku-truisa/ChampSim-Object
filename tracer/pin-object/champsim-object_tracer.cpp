@@ -100,7 +100,7 @@ void ResetCurrentInstruction(VOID* ip)
 {
   curr_instr = {};
   curr_instr.ip = (unsigned long long int)ip;
-  curr_instr.instr_count = insCount;
+  curr_instr.instr_count = instrCount;
 }
 
 BOOL ShouldWrite()
@@ -185,12 +185,12 @@ VOID Instruction(INS ins, VOID* v)
 VOID AllocObjectBefore(UINT64 size)
 {
   // Simulation Stop
-  return (insCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
     
   trace_memobject_format_t curr_memobject = {};    
 
   curr_memobject.oid                = memobjCount;
-  curr_memobject.osize              = (unsinged long long) size;
+  curr_memobject.osize              = (unsigned long long) size;
   curr_memobject.obase              = 0;
   curr_memobject.begin_instr_count  = insCount; // valid
   curr_memobject.end_instr_count    = 0;        // not free
@@ -203,29 +203,29 @@ VOID AllocObjectBefore(UINT64 size)
 
 VOID AllocObjectAfter(UINT64 ret)
 {
-  // Simulation Stop
-  return (insCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
-
   inside_routine= false;
   memobject_history.rbegin()->obase = ret;
+
+  // Simulation Stop
+  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
 }
 
 VOID FreeObjectBefore(UINT64 addr)
 {
-  // Simulation Stop
-  return (insCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
-  
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
     // if free address is in-bound and the memory object is not free and not invalid
-    if ( memobject_history[i].obase <= addr && membject_history[i].obound > addr // find coressponding memory object
+    if ( memobject_history[i].obase <= addr && memobject_history[i].obound > addr // find coressponding memory object
       && memobject_history[i].end_instr_count == 0                               // this memory object has not being freed
       && memobject_history[i].begin_instr_count != 0 )                           // this memory object is not invalid
     {
-      memobject_history[i].memobject_end_instr_count = insCount;
+      memobject_history[i].memobject_end_instr_count = instrCount;
       return;
     }
   }
+
+  // Simulation Stop
+  return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
 }
 
 /*!
@@ -277,11 +277,11 @@ VOID Fini(INT32 code, VOID* v)
   // write memobject trace into file
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
-    buf.oid                = memobject_history[i].oid;
-    buf.osize              = memobject_history[i].osize;
-    buf.obase              = memobject_history[i].obase;
-    buf.begin_instr_count  = memobject_history[i].begin_instr_count;
-    buf.end_instr_count    = memobject_history[i].end_instr_count;
+    buf_memobject.oid                = memobject_history[i].oid;
+    buf_memobject.osize              = memobject_history[i].osize;
+    buf_memobject.obase              = memobject_history[i].obase;
+    buf_memobject.begin_instr_count  = memobject_history[i].begin_instr_count;
+    buf_memobject.end_instr_count    = memobject_history[i].end_instr_count;
 
     typename decltype(memobjectfile)::char_type buf[sizeof(trace_memobject_format_t)];
 
@@ -305,7 +305,8 @@ VOID Fini(INT32 code, VOID* v)
   trace_instr_format_t curr_trace_instr;
   unsigned long long instr_cnt = 0;
 
-  while(fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, outfile)){
+  while(fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, outfile))
+  {
       instr_cnt++;
       input_instr_format_t buf_instr = {};
 
