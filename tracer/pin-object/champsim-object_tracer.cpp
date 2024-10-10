@@ -44,7 +44,7 @@ using input_instr_format_t = input_instr;
 /* ================================================================== */
 
 UINT64 instrCount = 0;
-UINT64 memobjCount = 1;
+UINT64 memobjCount = 0;
 
 std::ofstream outfile;       // pin instruction trace
 std::ofstream memobjectfile; // memory object trace
@@ -63,7 +63,6 @@ KNOB<std::string> KnobInstrFile(KNOB_MODE_WRITEONCE, "pintool", "i", "champsim_i
 KNOB<std::string> KnobObjectFile(KNOB_MODE_WRITEONCE, "pintool", "m", "champsim_memobject.trace", "specify file name for Champsim-Object memory object tracer output");
 
 KNOB<UINT64> KnobSkipInstructions(KNOB_MODE_WRITEONCE, "pintool", "s", "0", "How many instructions to skip before tracing begins");
-
 KNOB<UINT64> KnobTraceInstructions(KNOB_MODE_WRITEONCE, "pintool", "t", "1000000", "How many instructions to trace");
 
 /* ===================================================================== */
@@ -182,9 +181,9 @@ VOID Instruction(INS ins, VOID* v)
 
 VOID AllocObjectBefore(UINT64 size)
 {
+  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
 
-    
-  trace_memobject_format_t curr_memobject = {};    
+  trace_memobject_format_t curr_memobject = {};
 
   curr_memobject.oid                = memobjCount;
   curr_memobject.osize              = (unsigned long long) size;
@@ -195,18 +194,19 @@ VOID AllocObjectBefore(UINT64 size)
   memobject_history.push_back(curr_memobject);
 
   ++memobjCount;
-  }
+}
 
 VOID AllocObjectAfter(UINT64 ret)
 {
-  memobject_history.rbegin()->obase = ret;
+  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
 
-  // Simulation Stop
-  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
+  memobject_history.rbegin()->obase = ret;
 }
 
 VOID FreeObjectBefore(UINT64 addr)
 {
+  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
+
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
     // if free address is in-bound and the memory object is not free and not invalid
@@ -218,9 +218,6 @@ VOID FreeObjectBefore(UINT64 addr)
       return;
     }
   }
-
-  // Simulation Stop
-  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
 }
 
 /*!
@@ -279,7 +276,6 @@ VOID Fini(INT32 code, VOID* v)
     buf_memobject.end_instr_count    = memobject_history[i].end_instr_count;
 
     typename decltype(memobjectfile)::char_type buf[sizeof(trace_memobject_format_t)];
-
     std::memcpy(buf, &buf_memobject, sizeof(trace_memobject_format_t));
     memobjectfile.write(buf, sizeof(trace_memobject_format_t));
   }
@@ -290,8 +286,8 @@ VOID Fini(INT32 code, VOID* v)
   /* ===================================================================== */
   // Generate Ouput Trace File
   /* ===================================================================== */
+  
   // Open instruction trace file for read
-
   FILE* instrfile;
   instrfile = fopen(KnobInstrFile.Value().c_str(), "rb");
   if (!instrfile) {
@@ -300,11 +296,9 @@ VOID Fini(INT32 code, VOID* v)
   }
 
   trace_instr_format_t curr_trace_instr;
-  unsigned long long instr_cnt = 0;
 
   while(fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, instrfile))
   {
-      instr_cnt++;
       input_instr_format_t buf_instr = {};
 
       buf_instr.ip = curr_trace_instr.ip;
@@ -355,6 +349,8 @@ VOID Fini(INT32 code, VOID* v)
       memcpy(buf, &buf_instr, sizeof(input_instr));
       tracefile.write(buf, sizeof(input_instr));
   }
+
+  fclose(instrfile);
 
   tracefile.close();
 }
