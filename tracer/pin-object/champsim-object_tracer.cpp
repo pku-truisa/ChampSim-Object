@@ -191,14 +191,14 @@ VOID AllocObjectBefore(UINT64 size)
   curr_memobject.oid                = memobjCount;
   curr_memobject.osize              = (unsigned long long) size;
   curr_memobject.obase              = 0;
-  curr_memobject.begin_instr_count  = insCount; // valid
-  curr_memobject.end_instr_count    = 0;        // not free
+  curr_memobject.begin_instr_count  = instrCount; // valid
+  curr_memobject.end_instr_count    = 0;          // not free
 
   memobject_history.push_back(curr_memobject);
 
   inside_routine = true;
   ++memobjCount;
-  
+
   // Simulation Stop
   // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
   }
@@ -217,11 +217,11 @@ VOID FreeObjectBefore(UINT64 addr)
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
     // if free address is in-bound and the memory object is not free and not invalid
-    if ( memobject_history[i].obase <= addr && memobject_history[i].obound > addr // find coressponding memory object
+    if ( memobject_history[i].obase <= addr && (memobject_history[i].obase + memobject_history[i].osize) > addr // find coressponding memory object
       && memobject_history[i].end_instr_count == 0                               // this memory object has not being freed
       && memobject_history[i].begin_instr_count != 0 )                           // this memory object is not invalid
     {
-      memobject_history[i].memobject_end_instr_count = instrCount;
+      memobject_history[i].end_instr_count = instrCount;
       return;
     }
   }
