@@ -55,8 +55,6 @@ trace_memobject_format_t curr_memobject;
 
 vector<trace_memobject_format_t> memobject_history;
 
-bool inside_routine = false;
-
 /* ===================================================================== */
 // Command line switches
 /* ===================================================================== */
@@ -196,16 +194,11 @@ VOID AllocObjectBefore(UINT64 size)
 
   memobject_history.push_back(curr_memobject);
 
-  inside_routine = true;
   ++memobjCount;
-
-  // Simulation Stop
-  // return (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()));
   }
 
 VOID AllocObjectAfter(UINT64 ret)
 {
-  inside_routine= false;
   memobject_history.rbegin()->obase = ret;
 
   // Simulation Stop
