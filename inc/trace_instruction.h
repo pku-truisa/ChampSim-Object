@@ -46,13 +46,13 @@ struct input_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory
   unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory
 
-  unsigned long long destination_memobject_id[NUM_INSTR_DESTINATIONS];    // output memory object id
-  unsigned long long destination_memobject_base[NUM_INSTR_DESTINATIONS];  // output memory base address
-  unsigned long long destination_memobject_bound[NUM_INSTR_DESTINATIONS]; // output memory bound address
+  unsigned long long destination_oid[NUM_INSTR_DESTINATIONS];    // output memory object id
+  unsigned long long destination_obase[NUM_INSTR_DESTINATIONS];  // output memory base address
+  unsigned long long destination_obound[NUM_INSTR_DESTINATIONS]; // output memory bound address
 
-  unsigned long long source_memobject_id[NUM_INSTR_SOURCES];    // input memory object id  
-  unsigned long long source_memobject_base[NUM_INSTR_SOURCES];  // input memory base address
-  unsigned long long source_memobject_bound[NUM_INSTR_SOURCES]; // input memory bound address
+  unsigned long long source_oid[NUM_INSTR_SOURCES];    // input memory object id  
+  unsigned long long source_obase[NUM_INSTR_SOURCES];  // input memory base address
+  unsigned long long source_obound[NUM_INSTR_SOURCES]; // input memory bound address
 };
 
 struct cloudsuite_instr {
@@ -69,13 +69,13 @@ struct cloudsuite_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory
   unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory
 
-  unsigned long long destination_memobject_id[NUM_INSTR_DESTINATIONS]; // output memory malloc count
-  unsigned long long destination_memobject_base[NUM_INSTR_DESTINATIONS];         // output memory base address
-  unsigned long long destination_memobject_bound[NUM_INSTR_DESTINATIONS];        // output memory bound address
+  unsigned long long destination_oid[NUM_INSTR_DESTINATIONS];    // output memory object id
+  unsigned long long destination_obase[NUM_INSTR_DESTINATIONS];  // output memory object base address
+  unsigned long long destination_obound[NUM_INSTR_DESTINATIONS]; // output memory object bound address
 
-  unsigned long long source_memobject_id[NUM_INSTR_SOURCES];    // input memory object id  
-  unsigned long long source_memobject_base[NUM_INSTR_SOURCES];  // input memory base address
-  unsigned long long source_memobject_bound[NUM_INSTR_SOURCES]; // input memory bound address
+  unsigned long long source_oid[NUM_INSTR_SOURCES];    // input memory object id  
+  unsigned long long source_obase[NUM_INSTR_SOURCES];  // input memory object base address
+  unsigned long long source_obound[NUM_INSTR_SOURCES]; // input memory object bound address
 
   unsigned char asid[2];
 };

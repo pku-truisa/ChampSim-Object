@@ -68,13 +68,13 @@ struct ooo_model_instr {
   std::vector<uint64_t> destination_memory = {};
   std::vector<uint64_t> source_memory = {};
 
-  std::vector<uint64_t> destination_memobject_id = {};
-  std::vector<uint64_t> destination_memobject_base = {};
-  std::vector<uint64_t> destination_memobject_bound = {};
+  std::vector<uint64_t> destination_oid = {};
+  std::vector<uint64_t> destination_obase = {};
+  std::vector<uint64_t> destination_obound = {};
 
-  std::vector<uint64_t> source_memobject_id = {};
-  std::vector<uint64_t> source_memobject_base = {};
-  std::vector<uint64_t> source_memobject_bound = {};
+  std::vector<uint64_t> source_oid = {};
+  std::vector<uint64_t> source_obase = {};
+  std::vector<uint64_t> source_obound = {};
   // these are indices of instructions in the ROB that depend on me
   std::vector<std::reference_wrapper<ooo_model_instr>> registers_instrs_depend_on_me;
 
@@ -86,12 +86,12 @@ private:
     std::remove_copy(std::begin(instr.source_registers), std::end(instr.source_registers), std::back_inserter(this->source_registers), 0);
     std::remove_copy(std::begin(instr.destination_memory), std::end(instr.destination_memory), std::back_inserter(this->destination_memory), 0);
     std::remove_copy(std::begin(instr.source_memory), std::end(instr.source_memory), std::back_inserter(this->source_memory), 0);
-    std::remove_copy(std::begin(instr.destination_memobject_id), std::end(instr.destination_memobject_id), std::back_inserter(this->destination_memobject_id), 0);
-    std::remove_copy(std::begin(instr.destination_memobject_base), std::end(instr.destination_memobject_base), std::back_inserter(this->destination_memobject_base), 0);
-    std::remove_copy(std::begin(instr.destination_memobject_bound), std::end(instr.destination_memobject_bound), std::back_inserter(this->destination_memobject_bound), 0);
-    std::remove_copy(std::begin(instr.source_memobject_id), std::end(instr.source_memobject_id), std::back_inserter(this->source_memobject_id), 0);
-    std::remove_copy(std::begin(instr.source_memobject_base), std::end(instr.source_memobject_base), std::back_inserter(this->source_memobject_base), 0);
-    std::remove_copy(std::begin(instr.source_memobject_bound), std::end(instr.source_memobject_bound), std::back_inserter(this->source_memobject_bound), 0);
+    std::remove_copy(std::begin(instr.destination_oid), std::end(instr.destination_oid), std::back_inserter(this->destination_oid), 0);
+    std::remove_copy(std::begin(instr.destination_obase), std::end(instr.destination_obase), std::back_inserter(this->destination_obase), 0);
+    std::remove_copy(std::begin(instr.destination_obound), std::end(instr.destination_obound), std::back_inserter(this->destination_obound), 0);
+    std::remove_copy(std::begin(instr.source_oid), std::end(instr.source_oid), std::back_inserter(this->source_oid), 0);
+    std::remove_copy(std::begin(instr.source_obase), std::end(instr.source_obase), std::back_inserter(this->source_obase), 0);
+    std::remove_copy(std::begin(instr.source_obound), std::end(instr.source_obound), std::back_inserter(this->source_obound), 0);
 
     bool writes_sp = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_STACK_POINTER);
     bool writes_ip = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_INSTRUCTION_POINTER);
