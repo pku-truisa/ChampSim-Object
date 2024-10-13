@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "trace_memobject.h"
+#include "../pin-object/trace_memobject.h"
 #include "../../inc/trace_instruction.h"
 
 using std::cerr;
@@ -21,11 +21,10 @@ bool view_memobject_trace = false;
 
 int main(int argc, char** argv)
 {
-  trace_memobject_format_t trace_memobject_buf;
-
-  // defaults to reading from standard input
-
-  strcpy(tracefilename, "-");
+  printf("You have entered %d arguments:\n", argc);
+  for (int i = 0; i < argc; i++) {
+    printf("%s\n", argv[i]);
+  }
 
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-m"))
@@ -35,6 +34,7 @@ int main(int argc, char** argv)
   }
 
   // Open trace file for read
+  printf("%s\n", tracefilename);
   auto tracefile = fopen(tracefilename, "r");
   if (!tracefile) {
     std::cout << "Couldn't open trace file. No Exiting." << std::endl;
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
   // Print trace file
   if (view_memobject_trace) {
     while(fread(&curr_trace_memobj, sizeof(trace_memobject_format_t), 1, tracefile)) {
-      printf("oid: %llu osize: %llu obase: %llu start_instr: %llu end_instr: %llu", 
+      printf("oid: %llu osize: 0x%llx obase: 0x%llx start_instr: %llu end_instr: %llu \n", 
         curr_trace_memobj.oid,               // Memory ObjectID
         curr_trace_memobj.osize,             // Memory Object Size
         curr_trace_memobj.obase,             // Memory Objecct Base Address
@@ -55,3 +55,4 @@ int main(int argc, char** argv)
     }
   } 
 }
+
