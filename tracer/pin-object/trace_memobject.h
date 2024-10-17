@@ -38,12 +38,16 @@ struct trace_instr {
 };
 
 struct trace_memobject {
-    unsigned long long oid;               // Memory ObjectID
+  unsigned long long oid;               // Memory ObjectID
+  unsigned long long osize;             // Memory Object Size
+  unsigned long long obase;             // Memory Objecct Base Address
+  unsigned long long begin_instr_count;
+  unsigned long long end_instr_count;
+};
 
-    unsigned long long osize;             // Memory Object Size
-    unsigned long long obase;             // Memory Objecct Base Address
-    unsigned long long begin_instr_count; // invalid if zero
-    unsigned long long end_instr_count;   // not free if zero
+struct trace_memfree {
+  unsigned long long free_addr;
+  unsigned long long end_instr_count;
 };
 
 #endif

@@ -14,10 +14,12 @@ using std::string;
 using std::vector;
 
 using trace_memobject_format_t = trace_memobject;
+using trace_memfree_format_t = trace_memfree;
 
 char tracefilename[1000];
 
 bool view_memobject_trace = false;
+bool view_memfree_trace = false;
 
 int main(int argc, char** argv)
 {
@@ -29,6 +31,8 @@ int main(int argc, char** argv)
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-m"))
       view_memobject_trace = true;
+    else if (!strcmp(argv[i], "-f"))
+      view_memfree_trace = true;
     else
       strcpy(tracefilename, argv[i]);
   }
@@ -41,9 +45,9 @@ int main(int argc, char** argv)
     exit(1);
   }
 
-  trace_memobject_format_t curr_trace_memobj;
   // Print trace file
   if (view_memobject_trace) {
+    trace_memobject_format_t curr_trace_memobj;
     while(fread(&curr_trace_memobj, sizeof(trace_memobject_format_t), 1, tracefile)) {
       printf("oid: %llu osize: 0x%llx obase: 0x%llx start_instr: %llu end_instr: %llu \n", 
         curr_trace_memobj.oid,               // Memory ObjectID
@@ -53,6 +57,16 @@ int main(int argc, char** argv)
         curr_trace_memobj.end_instr_count    // not free if zero
         );
     }
-  } 
+  }
+
+  if (view_memfree_trace) {
+    trace_memfree_format_t curr_trace_memfree;
+    while(fread(&curr_trace_memfree, sizeof(trace_memobject_format_t), 1, tracefile)) {
+      printf("free_addr: %llx end_instr: %llu \n", 
+        curr_trace_memfree.free_addr,
+        curr_trace_memfree.end_instr_count    // not free if zero
+        );
+    }
+  }
 }
 

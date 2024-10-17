@@ -48,6 +48,7 @@ using std::vector;
 
 using trace_instr_format_t = trace_instr;
 using trace_memobject_format_t = trace_memobject;
+using trace_memfree_format_t = trace_memfree;
 using input_instr_format_t = input_instr;
 
 /* ================================================================== */
@@ -59,12 +60,13 @@ UINT64 memobjCount = 0;
 
 std::ofstream outfile;       // pin instruction trace
 std::ofstream memobjectfile; // memory object trace
+std::ofstream memfreefile;   // memory free trace
 std::ofstream tracefile;     // champsim-object input trace
 
 trace_instr_format_t curr_instr;
-trace_memobject_format_t curr_memobject;
 
 vector<trace_memobject_format_t> memobject_history;
+vector<trace_memfree_format_t> memfree_history;
 
 /* ===================================================================== */
 // Command line switches
@@ -72,6 +74,7 @@ vector<trace_memobject_format_t> memobject_history;
 KNOB<std::string> KnobTraceFile(KNOB_MODE_WRITEONCE,  "pintool", "o", "champsim-object.trace", "specify file name for Champsim-Object tracer output");
 KNOB<std::string> KnobInstrFile(KNOB_MODE_WRITEONCE, "pintool", "i", "champsim_instr.trace", "specify file name for Champsim-Object instruction tracer output");
 KNOB<std::string> KnobObjectFile(KNOB_MODE_WRITEONCE, "pintool", "m", "champsim_memobject.trace", "specify file name for Champsim-Object memory object tracer output");
+KNOB<std::string> KnobFreeFile(KNOB_MODE_WRITEONCE, "pintool", "f", "champsim_memfree.trace", "specify file name for Champsim-Object memory free tracer output");
 
 KNOB<UINT64> KnobSkipInstructions(KNOB_MODE_WRITEONCE, "pintool", "s", "0", "How many instructions to skip before tracing begins");
 KNOB<UINT64> KnobTraceInstructions(KNOB_MODE_WRITEONCE, "pintool", "t", "1000000", "How many instructions to trace");
@@ -91,6 +94,7 @@ INT32 Usage()
             << "Specify the output trace file with -o" << std::endl
             << "Specify the instruction trace file with -i" << std::endl
             << "Specify the memory object trace file with -m" << std::endl
+            << "Specify the memory object free file with -f" << std::endl
             << "Specify the number of instructions to skip before tracing with -s" << std::endl
             << "Specify the number of instructions to trace with -t" << std::endl
             << std::endl;
@@ -212,17 +216,12 @@ VOID AllocObjectAfter(UINT64 ret)
 
 VOID FreeObjectBefore(UINT64 addr)
 {
-  for (unsigned long long i = 0; i < memobject_history.size(); i++)
-  {
-    // if free address is in-bound and the memory object is not free and not invalid
-    if ( memobject_history[i].obase <= addr && (memobject_history[i].obase + memobject_history[i].osize) > addr // find coressponding memory object
-      && memobject_history[i].end_instr_count == 0                               // this memory object has not being freed
-      && memobject_history[i].begin_instr_count != 0 )                           // this memory object is not invalid
-    {
-      memobject_history[i].end_instr_count = instrCount;
-      return;
-    }
-  }
+  trace_memfree_format_t curr_memfree = {};
+  
+  curr_memfree.free_addr = addr;
+  curr_memfree.end_instr_count = instrCount;
+
+  memfree_history.push_back(curr_memfree);
 }
 
 /*!
@@ -235,6 +234,8 @@ VOID FreeObjectBefore(UINT64 addr)
 VOID Routine(RTN rtn, VOID*v)
 {
   string mallocname(MALLOC);
+  string freename(FREE);
+
   if ( RTN_Name(rtn).compare(mallocname) == 0 )
   {
     RTN_Open(rtn);
@@ -249,9 +250,7 @@ VOID Routine(RTN rtn, VOID*v)
 
     RTN_Close(rtn);
   }
-  
-  string freename(FREE);
-  if ( RTN_Name(rtn).compare(freename) == 0 )
+  else if ( RTN_Name(rtn).compare(freename) == 0 )
   {
     RTN_Open(rtn);
 
@@ -272,9 +271,33 @@ VOID Routine(RTN rtn, VOID*v)
  */
 VOID Fini(INT32 code, VOID* v) 
 { 
-  trace_memobject_format_t buf_memobject = {};
+  trace_memfree_format_t buf_memfree = {};
+
+  for (unsigned long long i = 0; i < memfree_history.size(); i++)
+  {
+    buf_memfree.free_addr = memfree_history[i].free_addr;
+    buf_memfree.end_instr_count = memfree_history[i].end_instr_count;
+
+
+  }
+  
+  for (unsigned long long i = 0; i < memfree_history.size(); i++)
+  {
+    std::cout << memfree_history[i].free_addr <<", " << memfree_history[i].end_instr_count << std::endl;
+
+    for (unsigned long long j = 0; j < memobject_history.size(); j++)
+    {
+      if ( memfree_history[i].free_addr == memobject_history[j].obase )
+         memobject_history[j].end_instr_count = memfree_history[i].end_instr_count;
+    }
+
+    typename decltype(memfreefile)::char_type buf_free[sizeof(trace_memfree_format_t)];
+    std::memcpy(buf_free, &buf_memfree, sizeof(trace_memfree_format_t));
+    memobjectfile.write(buf_free, sizeof(trace_memfree_format_t));
+  }
 
   // write memobject trace into file
+  trace_memobject_format_t buf_memobject = {};
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
     buf_memobject.oid                = memobject_history[i].oid;
@@ -283,12 +306,13 @@ VOID Fini(INT32 code, VOID* v)
     buf_memobject.begin_instr_count  = memobject_history[i].begin_instr_count;
     buf_memobject.end_instr_count    = memobject_history[i].end_instr_count;
 
-    typename decltype(memobjectfile)::char_type buf[sizeof(trace_memobject_format_t)];
-    std::memcpy(buf, &buf_memobject, sizeof(trace_memobject_format_t));
-    memobjectfile.write(buf, sizeof(trace_memobject_format_t));
+    typename decltype(memobjectfile)::char_type buf_obj[sizeof(trace_memobject_format_t)];
+    std::memcpy(buf_obj, &buf_memobject, sizeof(trace_memobject_format_t));
+    memobjectfile.write(buf_obj, sizeof(trace_memobject_format_t));
   }
 
   memobjectfile.close(); // close memory object trace file
+  memfreefile.close();   // close memory free trace file
   outfile.close();       // close instruction trace file
 
   /* ===================================================================== */
@@ -326,8 +350,8 @@ VOID Fini(INT32 code, VOID* v)
 
       for(unsigned long long i = 0; i < NUM_INSTR_DESTINATIONS; i++){
           for(auto memobj: memobject_history){
-              if(  (curr_trace_instr.instr_count >= memobj.begin_instr_count && memobj.begin_instr_count != 0)
-                && (curr_trace_instr.instr_count <= memobj.end_instr_count || memobj.end_instr_count == 0 )
+              if(  curr_trace_instr.instr_count >= memobj.begin_instr_count 
+                && curr_trace_instr.instr_count <= memobj.end_instr_count
                 && curr_trace_instr.destination_memory[i] >= memobj.obase 
                 && curr_trace_instr.destination_memory[i] < memobj.obase + memobj.osize )
               {
@@ -340,8 +364,8 @@ VOID Fini(INT32 code, VOID* v)
       }
       for(unsigned long long i = 0; i < NUM_INSTR_SOURCES;i++){
           for(auto memobj: memobject_history){
-              if(  (curr_trace_instr.instr_count >= memobj.begin_instr_count && memobj.begin_instr_count != 0)
-                && (curr_trace_instr.instr_count <= memobj.end_instr_count || memobj.end_instr_count == 0 )
+              if(  curr_trace_instr.instr_count >= memobj.begin_instr_count
+                && curr_trace_instr.instr_count <= memobj.end_instr_count
                 && curr_trace_instr.source_memory[i] >= memobj.obase 
                 && curr_trace_instr.source_memory[i] < memobj.obase + memobj.osize )
               {
@@ -388,6 +412,12 @@ int main(int argc, char* argv[])
   memobjectfile.open(KnobObjectFile.Value().c_str(), std::ios_base::binary | std::ios_base::trunc);
   if (!memobjectfile) {
     std::cout << "Couldn't open memory object trace file. Exiting." << std::endl;
+    exit(1);
+  }
+
+  memfreefile.open(KnobFreeFile.Value().c_str(), std::ios_base::binary | std::ios_base::trunc);
+  if (!memfreefile) {
+    std::cout << "Couldn't open memory free trace file. Exiting." << std::endl;
     exit(1);
   }
 
