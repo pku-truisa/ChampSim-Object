@@ -30,6 +30,17 @@
 #include "../../inc/trace_instruction.h"
 #include "pin.H"
 
+/* ===================================================================== */
+/* Names of malloc and free */
+/* ===================================================================== */
+#if defined(TARGET_MAC)
+#define MALLOC "_malloc"
+#define FREE "_free"
+#else
+#define MALLOC "malloc"
+#define FREE "free"
+#endif
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -181,8 +192,6 @@ VOID Instruction(INS ins, VOID* v)
 
 VOID AllocObjectBefore(UINT64 size)
 {
-  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
-
   trace_memobject_format_t curr_memobject = {};
 
   curr_memobject.oid                = memobjCount;
@@ -198,15 +207,11 @@ VOID AllocObjectBefore(UINT64 size)
 
 VOID AllocObjectAfter(UINT64 ret)
 {
-  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
-
   memobject_history.rbegin()->obase = ret;
 }
 
 VOID FreeObjectBefore(UINT64 addr)
 {
-  if (instrCount <= (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) return;
-
   for (unsigned long long i = 0; i < memobject_history.size(); i++)
   {
     // if free address is in-bound and the memory object is not free and not invalid
@@ -229,7 +234,8 @@ VOID FreeObjectBefore(UINT64 addr)
  */
 VOID Routine(RTN rtn, VOID*v)
 {
-  if (RTN_Name(rtn).find("malloc") != std::string::npos)
+  string mallocname(MALLOC);
+  if ( RTN_Name(rtn).compare(mallocname) == 0 )
   {
     RTN_Open(rtn);
 
@@ -243,7 +249,9 @@ VOID Routine(RTN rtn, VOID*v)
 
     RTN_Close(rtn);
   }
-  else if (RTN_Name(rtn).find("free") != std::string::npos)
+  
+  string freename(FREE);
+  if ( RTN_Name(rtn).compare(freename) == 0 )
   {
     RTN_Open(rtn);
 
