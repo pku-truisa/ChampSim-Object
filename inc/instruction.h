@@ -87,11 +87,7 @@ private:
     std::remove_copy(std::begin(instr.destination_memory), std::end(instr.destination_memory), std::back_inserter(this->destination_memory), 0);
     std::remove_copy(std::begin(instr.source_memory), std::end(instr.source_memory), std::back_inserter(this->source_memory), 0);
     std::remove_copy(std::begin(instr.destination_oid), std::end(instr.destination_oid), std::back_inserter(this->destination_oid), 0);
-    std::remove_copy(std::begin(instr.destination_obase), std::end(instr.destination_obase), std::back_inserter(this->destination_obase), 0);
-    std::remove_copy(std::begin(instr.destination_obound), std::end(instr.destination_obound), std::back_inserter(this->destination_obound), 0);
     std::remove_copy(std::begin(instr.source_oid), std::end(instr.source_oid), std::back_inserter(this->source_oid), 0);
-    std::remove_copy(std::begin(instr.source_obase), std::end(instr.source_obase), std::back_inserter(this->source_obase), 0);
-    std::remove_copy(std::begin(instr.source_obound), std::end(instr.source_obound), std::back_inserter(this->source_obound), 0);
 
     bool writes_sp = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_STACK_POINTER);
     bool writes_ip = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_INSTRUCTION_POINTER);

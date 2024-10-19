@@ -19,35 +19,11 @@
 
 #include <limits>
 
-#include "../../inc/trace_instruction.h"
-
-struct trace_instr {
-  // instruction pointer or PC (Program Counter)
-  unsigned long long ip;
-  unsigned long long instr_count;
-
-  // branch info
-  unsigned char is_branch;
-  unsigned char branch_taken;
-
-  unsigned char destination_registers[NUM_INSTR_DESTINATIONS]; // output registers
-  unsigned char source_registers[NUM_INSTR_SOURCES];           // input registers
-
-  unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory
-  unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory
-};
-
 struct trace_memobject {
   unsigned long long oid;               // Memory ObjectID
-  unsigned long long osize;             // Memory Object Size
   unsigned long long obase;             // Memory Objecct Base Address
-  unsigned long long begin_instr_count;
-  unsigned long long end_instr_count;
-};
-
-struct trace_memfree {
-  unsigned long long free_addr;
-  unsigned long long end_instr_count;
+  unsigned long long osize;             // Memory Object Size
+  unsigned long long otimestamp;        // the InstrCount After Malloc()
 };
 
 #endif
