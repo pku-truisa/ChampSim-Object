@@ -19,11 +19,12 @@
 
 #include <limits>
 
-struct trace_memobject {
+struct input_memobject {
   unsigned long long oid;               // Memory ObjectID
   unsigned long long obase;             // Memory Objecct Base Address
   unsigned long long osize;             // Memory Object Size
-  unsigned long long otimestamp;        // the InstrCount After Malloc()
+
+  unsigned long long timestamp;         // the Time After Malloc()
 };
 
 #endif

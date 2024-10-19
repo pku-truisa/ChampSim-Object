@@ -46,9 +46,7 @@ struct input_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory address
   unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory address
 
-  unsigned long long destination_oid[NUM_INSTR_DESTINATIONS];    // output memory object id
-  unsigned long long source_oid[NUM_INSTR_SOURCES];              // input memory object id  
-
+  unsigned long long timestamp;
 };
 
 struct cloudsuite_instr {
@@ -65,10 +63,9 @@ struct cloudsuite_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS]; // output memory address
   unsigned long long source_memory[NUM_INSTR_SOURCES];           // input memory address
 
-  unsigned long long destination_oid[NUM_INSTR_DESTINATIONS];    // output memory object id
-  unsigned long long source_oid[NUM_INSTR_SOURCES];              // input memory object id  
-
   unsigned char asid[2];
+
+  unsigned long long timestamp;
 };
 
 #endif

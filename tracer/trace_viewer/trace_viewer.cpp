@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../pin-object/trace_memobject.h"
+#include "../../inc/trace_memobject.h"
 #include "../../inc/trace_instruction.h"
 
 using std::cerr;
@@ -13,8 +13,8 @@ using std::endl;
 using std::string;
 using std::vector;
 
-using trace_memobject_format_t = trace_memobject;
-using input_instr_format_t = input_instr;
+using trace_memobject_format_t = input_memobject;
+using trace_instr_format_t = input_instr;
 
 char tracefilename[1000];
 
@@ -48,14 +48,26 @@ int main(int argc, char** argv)
 
     while( fread(&curr_trace_memobj, sizeof(trace_memobject_format_t), 1, tracefile) ) 
     {
-      printf("oid: %llu ; otimestamp: %llu; obase: 0x%llx ; osize: %llu \n", 
+      fprintf(stderr, "timestamp: %llu; oid: %llu ; obase: 0x%llx ; osize: %llu \n", 
+        curr_trace_memobj.timestamp,         // The Time after Malloc()
         curr_trace_memobj.oid,               // Memory ObjectID
-        curr_trace_memobj.otimestamp,        // not free if zero
         curr_trace_memobj.obase,             // Memory Objecct Base Address
         curr_trace_memobj.osize              // Memory Object Size
         );
     }
   }
 
+  if ( view_instruction_trace) {
+    trace_instr_format_t curr_trace_instr;
+    while ( fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, tracefile) ) 
+    {
+      fprintf(stderr, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n", 
+        curr_trace_instr.timestamp,        // The Time after Malloc()
+        curr_trace_instr.ip,               // Memory ObjectID
+        curr_trace_instr.is_branch,        // Memory Objecct Base Address
+        curr_trace_instr.branch_taken      // Memory Object Size
+        );
+    }
+  }
 }
 

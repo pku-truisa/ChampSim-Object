@@ -65,16 +65,9 @@ struct ooo_model_instr {
   std::vector<uint8_t> destination_registers = {}; // output registers
   std::vector<uint8_t> source_registers = {};      // input registers
 
-  std::vector<uint64_t> destination_memory = {};
-  std::vector<uint64_t> source_memory = {};
+  std::vector<uint64_t> destination_memory = {};   // output memory
+  std::vector<uint64_t> source_memory = {};        // input memory
 
-  std::vector<uint64_t> destination_oid = {};
-  std::vector<uint64_t> destination_obase = {};
-  std::vector<uint64_t> destination_obound = {};
-
-  std::vector<uint64_t> source_oid = {};
-  std::vector<uint64_t> source_obase = {};
-  std::vector<uint64_t> source_obound = {};
   // these are indices of instructions in the ROB that depend on me
   std::vector<std::reference_wrapper<ooo_model_instr>> registers_instrs_depend_on_me;
 
@@ -86,8 +79,6 @@ private:
     std::remove_copy(std::begin(instr.source_registers), std::end(instr.source_registers), std::back_inserter(this->source_registers), 0);
     std::remove_copy(std::begin(instr.destination_memory), std::end(instr.destination_memory), std::back_inserter(this->destination_memory), 0);
     std::remove_copy(std::begin(instr.source_memory), std::end(instr.source_memory), std::back_inserter(this->source_memory), 0);
-    std::remove_copy(std::begin(instr.destination_oid), std::end(instr.destination_oid), std::back_inserter(this->destination_oid), 0);
-    std::remove_copy(std::begin(instr.source_oid), std::end(instr.source_oid), std::back_inserter(this->source_oid), 0);
 
     bool writes_sp = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_STACK_POINTER);
     bool writes_ip = std::count(std::begin(destination_registers), std::end(destination_registers), champsim::REG_INSTRUCTION_POINTER);
