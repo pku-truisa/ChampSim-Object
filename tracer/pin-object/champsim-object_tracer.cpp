@@ -60,7 +60,7 @@ std::ofstream memobjectfile; // memory object trace
 trace_instr_format_t curr_instr;
 trace_memobject_format_t curr_memobject;
 
-vector<trace_memobject_format_t> memobject_history;
+//vector<trace_memobject_format_t> memobject_history;
 
 /* ===================================================================== */
 // Command line switches
@@ -195,9 +195,15 @@ VOID AllocObjectAfter(UINT64 ret)
 {
   curr_memobject.obase     = (unsigned long long)ret;
   curr_memobject.timestamp = (unsigned long long)instrCount;
-
-  memobject_history.push_back(curr_memobject);
+  
   ++memobjCount;
+  if (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) 
+    return;
+
+  // memobject_history.push_back(curr_memobject);
+  typename decltype(memobjectfile)::char_type buf_obj[sizeof(trace_memobject_format_t)];
+  std::memcpy(buf_obj, &curr_memobject, sizeof(trace_memobject_format_t));
+  memobjectfile.write(buf_obj, sizeof(trace_memobject_format_t));
 }
 
 /*!
@@ -237,6 +243,7 @@ VOID Routine(RTN rtn, VOID*v)
 VOID Fini(INT32 code, VOID* v) 
 { 
   // write memobject trace into file
+/*  
   trace_memobject_format_t buf_memobject = {};
   for (UINT64 i = 0; i < memobject_history.size(); i++)
   {
@@ -249,7 +256,7 @@ VOID Fini(INT32 code, VOID* v)
     std::memcpy(buf_obj, &buf_memobject, sizeof(trace_memobject_format_t));
     memobjectfile.write(buf_obj, sizeof(trace_memobject_format_t));
   }
-
+*/
   memobjectfile.close(); // close memory object trace file
   outfile.close();       // close instruction trace file
 }
