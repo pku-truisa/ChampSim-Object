@@ -48,12 +48,13 @@ int main(int argc, char** argv)
 
     while( fread(&curr_trace_memobj, sizeof(trace_memobject_format_t), 1, tracefile) ) 
     {
-      fprintf(stderr, "timestamp: %llu; oid: %llu ; obase: 0x%llx ; osize: %llu \n", 
-        curr_trace_memobj.timestamp,         // The Time after Malloc()
-        curr_trace_memobj.oid,               // Memory ObjectID
-        curr_trace_memobj.obase,             // Memory Objecct Base Address
-        curr_trace_memobj.osize              // Memory Object Size
-        );
+      //fprintf(stderr, "timestamp: %llu; oid: %llu ; obase: 0x%llx ; osize: %llu \n", 
+      fprintf(stdout, "timestamp: %llu; oid: %llu ; obase: 0x%llx ; osize: %llu \n",
+      curr_trace_memobj.timestamp,         // The Time after Malloc()
+      curr_trace_memobj.oid,               // Memory ObjectID
+      curr_trace_memobj.obase,             // Memory Objecct Base Address
+      curr_trace_memobj.osize              // Memory Object Size
+      );
     }
   }
 
@@ -61,12 +62,13 @@ int main(int argc, char** argv)
     trace_instr_format_t curr_trace_instr;
     while ( fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, tracefile) ) 
     {
-      fprintf(stderr, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n", 
-        curr_trace_instr.timestamp,        // The Time after Malloc()
-        curr_trace_instr.ip,               // Memory ObjectID
-        curr_trace_instr.is_branch,        // Memory Objecct Base Address
-        curr_trace_instr.branch_taken      // Memory Object Size
-        );
+      //fprintf(stderr, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n", 
+      fprintf(stdout, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n",
+      curr_trace_instr.timestamp,        // The Time after Malloc()
+      curr_trace_instr.ip,               // Memory ObjectID
+      curr_trace_instr.is_branch,        // Memory Objecct Base Address
+      curr_trace_instr.branch_taken      // Memory Object Size
+      );
     }
   }
 }

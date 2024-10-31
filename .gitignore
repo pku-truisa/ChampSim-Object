@@ -18,3 +18,4 @@ vcpkg_installed/
 
 **/_build
 **/_doxygen
+tracer/trace_viewer/trace_viewer
