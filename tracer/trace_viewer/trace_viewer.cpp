@@ -63,11 +63,17 @@ int main(int argc, char** argv)
     while ( fread(&curr_trace_instr, sizeof(trace_instr_format_t), 1, tracefile) ) 
     {
       //fprintf(stderr, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n", 
-      fprintf(stdout, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n",
+      fprintf(stdout, "timestamp: %llu; ip: %llx ; is_branch: %u ; branch_taken: %u \n store: %llx %llx load: %llx %llx %llx %llx \n",
       curr_trace_instr.timestamp,        // The Time after Malloc()
       curr_trace_instr.ip,               // Memory ObjectID
       curr_trace_instr.is_branch,        // Memory Objecct Base Address
-      curr_trace_instr.branch_taken      // Memory Object Size
+      curr_trace_instr.branch_taken,      // Memory Object Size
+      curr_trace_instr.destination_memory[0],
+      curr_trace_instr.destination_memory[1],
+      curr_trace_instr.source_memory[0],
+      curr_trace_instr.source_memory[1],
+      curr_trace_instr.source_memory[2],
+      curr_trace_instr.source_memory[3]
       );
     }
   }
