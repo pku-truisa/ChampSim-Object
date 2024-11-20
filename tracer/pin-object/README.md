@@ -1,5 +1,5 @@
 # Intel PIN tracer
-# Object-Centric Architecture, contributed by MPRC, Peking University
+# Object-Centric Architecture, contributed by Peking University
 
 The included PIN tool `champsim-object_tracer.cpp` can be used to generate new traces.
 It has been tested (April 2022) using PIN 3.22.
@@ -21,11 +21,15 @@ The provided makefile will generate `obj-intel64/champsim-object_tracer.so`.
     make
     $PIN_ROOT/pin -t obj-intel64/champsim-object_tracer.so -- <your program here>
 
-The tracer has three options you can set:
+The tracer has four options you can set:
 ```
 -o
-Specify the output file for your trace.
-The default is default_trace.champsim
+Specify the output file for your insrction trace.
+The default is champsim_instruction.trace
+
+-m
+Specify the output file for your memory object trace.
+the default is champsim_memobject.trace
 
 -s <number>
 Specify the number of instructions to skip in the program before tracing begins.
@@ -39,5 +43,5 @@ For example, you could trace 200,000 instructions of the program ls, after skipp
 
     pin -t obj/champsim-object_tracer.so -o traces/ls_trace.champsim -s 100000 -t 200000 -- ls
 
-Traces created with the champsim_tracer.so are approximately 64 bytes per instruction, but they generally compress down to less than a byte per instruction using xz compression.
+Traces created with the champsim-object_tracer.so are approximately 70 bytes per instruction, but they generally compress down to less than a byte per instruction using xz compression.
 
