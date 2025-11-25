@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef TRACE_MAMOBJECT_H
+#ifndef TRACE_MEMOBJECT_H
 #define TRACE_MEMOBJECT_H
 
 #include <limits>
@@ -25,6 +25,7 @@ struct input_memobject {
   unsigned long long osize;             // Memory Object Size
 
   unsigned long long timestamp;         // the Time After Malloc()
+  unsigned long long free_timestamp;    // the Time When Free() was called (0 if not freed)
 };
 
-#endif
+#endif // TRACE_MEMOBJECT_H

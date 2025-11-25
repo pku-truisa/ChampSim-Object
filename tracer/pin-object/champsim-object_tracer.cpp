@@ -25,6 +25,8 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <algorithm>
 
 #include "../../inc/trace_memobject.h"
 #include "../../inc/trace_instruction.h"
@@ -60,7 +62,21 @@ std::ofstream memobjectfile; // memory object trace
 trace_instr_format_t curr_instr;
 trace_memobject_format_t curr_memobject;
 
-//vector<trace_memobject_format_t> memobject_history;
+// forward declare free handler so Routine can reference it before its definition
+VOID FreeObjectBefore(UINT64 ptr);
+
+// lock to protect memobject file writes and alloc_map
+PIN_LOCK memfile_lock;
+
+// meta info stored for each allocation so we can update the allocation record on free
+struct alloc_meta_t {
+  unsigned long long oid;
+  std::streampos file_offset;
+  unsigned long long osize;
+  unsigned long long timestamp;
+};
+
+std::unordered_map<unsigned long long, alloc_meta_t> alloc_map;
 
 /* ===================================================================== */
 // Command line switches
@@ -128,8 +144,17 @@ template <typename T>
 void WriteToSet(T* begin, T* end, UINT32 r)
 {
   auto set_end = std::find(begin, end, 0);
-  auto found_reg = std::find(begin, set_end, r); // check to see if this register is already in the list
-  *found_reg = r;
+  if (set_end == end) {
+    // no space to add a new entry; only try to find existing entry
+    auto found_reg = std::find(begin, end, r);
+    return;
+  }
+  // check to see if this register is already in the list
+  auto found_reg = std::find(begin, set_end, r);
+  if (found_reg == set_end) {
+    // not found, place at first zero
+    *set_end = static_cast<T>(r);
+  }
 }
 
 /* ===================================================================== */
@@ -187,23 +212,38 @@ VOID Instruction(INS ins, VOID* v)
 VOID AllocObjectBefore(UINT64 size)
 {
   curr_memobject       = {};
-  curr_memobject.oid   = (unsigned long long)memobjCount;
   curr_memobject.osize = (unsigned long long)size;
+  curr_memobject.free_timestamp = 0;
 }
 
 VOID AllocObjectAfter(UINT64 ret)
 {
   curr_memobject.obase     = (unsigned long long)ret;
   curr_memobject.timestamp = (unsigned long long)instrCount;
-  
-  ++memobjCount;
-  if (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value())) 
+  curr_memobject.free_timestamp = 0;
+
+  if (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()))
     return;
 
-  // memobject_history.push_back(curr_memobject);
+  // write allocation record immediately and record file offset for later update on free
+  PIN_GetLock(&memfile_lock, 1);
+  unsigned long long assigned_oid = memobjCount++;
+  curr_memobject.oid = assigned_oid;
+
+  std::streampos rec_offset = memobjectfile.tellp();
   typename decltype(memobjectfile)::char_type buf_obj[sizeof(trace_memobject_format_t)];
   std::memcpy(buf_obj, &curr_memobject, sizeof(trace_memobject_format_t));
   memobjectfile.write(buf_obj, sizeof(trace_memobject_format_t));
+
+  alloc_meta_t meta;
+  meta.oid = assigned_oid;
+  meta.file_offset = rec_offset;
+  meta.osize = curr_memobject.osize;
+  meta.timestamp = curr_memobject.timestamp;
+  alloc_map[curr_memobject.obase] = meta;
+
+  // release lock
+  PIN_ReleaseLock(&memfile_lock);
 }
 
 /*!
@@ -216,6 +256,7 @@ VOID AllocObjectAfter(UINT64 ret)
 VOID Routine(RTN rtn, VOID*v)
 {
   string mallocname(MALLOC);
+  string freename("free");
 
   if ( RTN_Name(rtn).compare(mallocname) == 0 )
   {
@@ -231,6 +272,14 @@ VOID Routine(RTN rtn, VOID*v)
 
     RTN_Close(rtn);
   }
+  if ( RTN_Name(rtn).compare(freename) == 0 )
+  {
+    RTN_Open(rtn);
+
+    RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)FreeObjectBefore, IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_END);
+
+    RTN_Close(rtn);
+  }
 }
 
 /*!
@@ -242,23 +291,47 @@ VOID Routine(RTN rtn, VOID*v)
  */
 VOID Fini(INT32 code, VOID* v) 
 { 
-  // write memobject trace into file
-/*  
-  trace_memobject_format_t buf_memobject = {};
-  for (UINT64 i = 0; i < memobject_history.size(); i++)
-  {
-    buf_memobject.oid                = memobject_history[i].oid;
-    buf_memobject.obase              = memobject_history[i].obase;
-    buf_memobject.osize              = memobject_history[i].osize;
-    buf_memobject.timestamp          = memobject_history[i].timestamp;
-
-    typename decltype(memobjectfile)::char_type buf_obj[sizeof(trace_memobject_format_t)];
-    std::memcpy(buf_obj, &buf_memobject, sizeof(trace_memobject_format_t));
-    memobjectfile.write(buf_obj, sizeof(trace_memobject_format_t));
-  }
-*/
+  // real-time writing is used; just close files
   memobjectfile.close(); // close memory object trace file
   outfile.close();       // close instruction trace file
+}
+
+// Called before free(ptr) is executed
+VOID FreeObjectBefore(UINT64 ptr)
+{
+  // only consider frees within tracing window
+  if (instrCount > (KnobTraceInstructions.Value() + KnobSkipInstructions.Value()))
+    return;
+
+  PIN_GetLock(&memfile_lock, 1);
+
+  auto it = alloc_map.find((unsigned long long)ptr);
+  if (it != alloc_map.end()) {
+    // prepare updated allocation record with free_timestamp
+    trace_memobject_format_t alloc_rec = {};
+    alloc_rec.oid = it->second.oid;
+    alloc_rec.obase = (unsigned long long)ptr;
+    alloc_rec.osize = it->second.osize;
+    alloc_rec.timestamp = it->second.timestamp;
+    alloc_rec.free_timestamp = (unsigned long long)instrCount;
+
+    // seek and overwrite the allocation record
+    memobjectfile.seekp(it->second.file_offset, std::ios::beg);
+    typename decltype(memobjectfile)::char_type buf_alloc[sizeof(trace_memobject_format_t)];
+    std::memcpy(buf_alloc, &alloc_rec, sizeof(trace_memobject_format_t));
+    memobjectfile.write(buf_alloc, sizeof(trace_memobject_format_t));
+
+    // move write pointer back to end for future appends
+    memobjectfile.seekp(0, std::ios::end);
+
+    // remove mapping (freed)
+    alloc_map.erase(it);
+    PIN_ReleaseLock(&memfile_lock);
+    return;
+  }
+  // no matching allocation recorded; do not append a free-only record per request
+  PIN_ReleaseLock(&memfile_lock);
+  return;
 }
 
 /*!
@@ -288,6 +361,9 @@ int main(int argc, char* argv[])
     std::cout << "Couldn't open memory object trace file. Exiting." << std::endl;
     exit(1);
   }
+
+  // initialize lock for memobject file and alloc_map
+  PIN_InitLock(&memfile_lock);
 
   // Register function to be called to instrument instructions
   INS_AddInstrumentFunction(Instruction, 0);
