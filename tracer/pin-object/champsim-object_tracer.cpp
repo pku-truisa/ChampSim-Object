@@ -144,17 +144,8 @@ template <typename T>
 void WriteToSet(T* begin, T* end, UINT32 r)
 {
   auto set_end = std::find(begin, end, 0);
-  if (set_end == end) {
-    // no space to add a new entry; only try to find existing entry
-    auto found_reg = std::find(begin, end, r);
-    return;
-  }
-  // check to see if this register is already in the list
-  auto found_reg = std::find(begin, set_end, r);
-  if (found_reg == set_end) {
-    // not found, place at first zero
-    *set_end = static_cast<T>(r);
-  }
+  auto found_reg = std::find(begin, set_end, r); // check to see if this register is already in the list
+  *found_reg = r;
 }
 
 /* ===================================================================== */
