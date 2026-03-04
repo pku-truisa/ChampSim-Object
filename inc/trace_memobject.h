@@ -19,13 +19,15 @@
 
 #include <limits>
 
-struct input_memobject {
-  unsigned long long oid;               // Memory ObjectID
-  unsigned long long obase;             // Memory Objecct Base Address
-  unsigned long long osize;             // Memory Object Size
+struct input_memobj {
+  unsigned long long oid;              // Memory ObjectID
+  unsigned long long obase;            // Memory Objecct Base Address
+  unsigned long long osize;            // Memory Object Size
 
-  unsigned long long timestamp;         // the Time After Malloc()
-  unsigned long long free_timestamp;    // the Time When Free() was called (0 if not freed)
+  unsigned long long timestamp;        // the Time After Malloc()
+  
+  unsigned char is_freed;              // whether the object was freed (1 if freed, 0 if not)
+  unsigned char otype;                 // Memory Object Type (0 for malloc, 1 for calloc, 2 for realloc, 3 for mmap, etc.)
 };
 
 #endif // TRACE_MEMOBJECT_H
